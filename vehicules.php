@@ -7,15 +7,58 @@ if(!isset($_SESSION['id_client'])){
 }
 
 require_once 'classes/Database.php';
+require_once 'classes/Vehicule.php';
 
 $db = new Database();
 $pdo = $db->getPdo();
 
-$stmt = $pdo->query("SELECT vehicules.*,categories.nom AS nom_categorie FROM vehicules INNER JOIN categories ON vehicules.categorie_id = categories.id_categorie WHERE vehicules.disponible = 1");
+// Récupérer les catégories pour le select
+$stmt_categories = $pdo->query("SELECT * FROM categories ORDER BY nom");
+$categories = $stmt_categories->fetchAll(PDO::FETCH_ASSOC);
 
-$vehicules = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Récupérer les paramètres du formulaire
+if (isset($_GET['recherche'])) {
+    $recherche = $_GET['recherche'];
+} else {
+    $recherche = '';
+}
+
+if (isset($_GET['categorie'])) {
+    $categorie_filtre = $_GET['categorie'];
+} else {
+    $categorie_filtre = '';
+}
+
+if (isset($_GET['page'])) {
+    $page = (int)$_GET['page'];
+} else {
+    $page = 1;
+}
+
+$vehicules_par_page = 6;
+$offset = ($page - 1) * $vehicules_par_page;
+
+// Utiliser les méthodes de la classe Vehicule
+if (!empty($recherche)) {
+    // CAS 1: Si recherche
+    $vehicules = Vehicule::rechercherParModele($pdo, $recherche);
+    $total_vehicules = count($vehicules);
+} else if (!empty($categorie_filtre)) {
+    // CAS 2: Si filtre catégorie
+    $vehicules = Vehicule::filtrerParCategorie($pdo, $categorie_filtre);
+    $total_vehicules = count($vehicules);
+} else {
+    // CAS 3: Affichage normal avec pagination
+    $vehicules = Vehicule::listerPagine($pdo, $vehicules_par_page, $offset);
+    
+    // Compter le total pour la pagination
+    $stmt_total = $pdo->query("SELECT COUNT(*) as total FROM vehicules WHERE disponible = 1");
+    $result = $stmt_total->fetch(PDO::FETCH_ASSOC);
+    $total_vehicules = $result['total'];
+}
+
+$total_pages = ceil($total_vehicules / $vehicules_par_page);
 ?>
-
 
 <!DOCTYPE html>
 <html lang="fr">
@@ -39,7 +82,7 @@ $vehicules = $stmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
             <div class="flex items-center space-x-4">
                 <span class="text-gray-700">
-                    Bienvenue, <strong><?php echo $_SESSION['nom']; ?></strong>
+                    Bienvenue, <strong><?php echo htmlspecialchars($_SESSION['nom']); ?></strong>
                 </span>
                 <a href="deconnexion.php" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
                     Déconnexion
@@ -55,6 +98,58 @@ $vehicules = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="text-center mb-12">
             <h2 class="text-4xl font-bold text-gray-800 mb-4">Véhicules Disponibles</h2>
             <p class="text-gray-600 text-lg">Découvrez notre large sélection de véhicules à louer</p>
+        </div>
+
+        <!-- Formulaire de recherche et filtre -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <form method="GET" action="" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                
+                <!-- Champ Recherche -->
+                <div>
+                    <label for="recherche" class="block text-sm font-medium text-gray-700 mb-2">
+                        Rechercher un véhicule
+                    </label>
+                    <input 
+                        type="text" 
+                        id="recherche" 
+                        name="recherche" 
+                        placeholder="Ex: Peugeot, Toyota..."
+                        value="<?php echo isset($_GET['recherche']) ? htmlspecialchars($_GET['recherche']) : ''; ?>"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                </div>
+
+                <!-- Filtre Catégorie -->
+                <div>
+                    <label for="categorie" class="block text-sm font-medium text-gray-700 mb-2">
+                        Catégorie
+                    </label>
+                    <select 
+                        id="categorie" 
+                        name="categorie"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">Toutes les catégories</option>
+                        <?php foreach ($categories as $cat): ?>
+                            <option value="<?php echo $cat['id_categorie']; ?>" 
+                                    <?php echo ($categorie_filtre == $cat['id_categorie']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($cat['nom']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <!-- Bouton -->
+                <div class="flex items-end">
+                    <button 
+                        type="submit"
+                        class="w-full bg-blue-600 text-white py-2 px-6 rounded-lg font-semibold hover:bg-blue-700 transition"
+                    >
+                        🔍 Rechercher
+                    </button>
+                </div>
+
+            </form>
         </div>
 
         <!-- Si aucun véhicule -->
@@ -121,6 +216,34 @@ $vehicules = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <?php endforeach; ?>
 
         </div>
+
+        <!-- Pagination (seulement si pas de recherche/filtre) -->
+        <?php if (empty($recherche) && empty($categorie_filtre) && $total_pages > 1): ?>
+        <div class="mt-8 flex justify-center items-center space-x-4">
+            
+            <!-- Bouton Précédent -->
+            <?php if ($page > 1): ?>
+                <a href="?page=<?php echo $page - 1; ?>" 
+                   class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                    ← Précédent
+                </a>
+            <?php endif; ?>
+            
+            <!-- Numéro de page -->
+            <span class="text-gray-700 font-semibold">
+                Page <?php echo $page; ?> sur <?php echo $total_pages; ?>
+            </span>
+            
+            <!-- Bouton Suivant -->
+            <?php if ($page < $total_pages): ?>
+                <a href="?page=<?php echo $page + 1; ?>" 
+                   class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                    Suivant →
+                </a>
+            <?php endif; ?>
+            
+        </div>
+        <?php endif; ?>
 
         <?php endif; ?>
 

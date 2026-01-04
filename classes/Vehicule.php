@@ -61,5 +61,41 @@ class Vehicule {
     public function setDisponible($disponible) {
         $this->disponible = $disponible;
     }
+
+
+// Rechercher par modèle
+public static function rechercherParModele($pdo, $recherche) {
+    $sql = "SELECT vehicules.*, categories.nom AS nom_categorie 
+            FROM vehicules 
+            INNER JOIN categories ON vehicules.categorie_id = categories.id_categorie 
+            WHERE vehicules.disponible = 1 AND vehicules.modele LIKE ?";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute(["%$recherche%"]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Filtrer par catégorie
+public static function filtrerParCategorie($pdo, $categorie_id) {
+    $sql = "SELECT vehicules.*, categories.nom AS nom_categorie 
+            FROM vehicules 
+            INNER JOIN categories ON vehicules.categorie_id = categories.id_categorie 
+            WHERE vehicules.disponible = 1 AND vehicules.categorie_id = ?";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$categorie_id]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Lister avec pagination
+public static function listerPagine($pdo, $limit, $offset) {
+    $sql = "SELECT vehicules.*, categories.nom AS nom_categorie 
+            FROM vehicules 
+            INNER JOIN categories ON vehicules.categorie_id = categories.id_categorie 
+            WHERE vehicules.disponible = 1 
+            LIMIT ? OFFSET ?";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$limit, $offset]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
 }
 ?>
