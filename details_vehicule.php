@@ -141,14 +141,36 @@ if (!$vehicule) {
                         </div>
 
                         <!-- Bouton Réserver -->
-                        <a href="vehicules.php" 
-                           class="block w-full bg-blue-600 text-white text-center py-4 rounded-lg font-bold text-lg hover:bg-blue-700 transition duration-200 transform hover:scale-105">
-                            Retour à la liste
-                        </a>
-                        
-                        <p class="text-center text-sm text-gray-500 mt-3">
-                            La réservation sera disponible prochainement
-                        </p>
+                       <!-- Formulaire de Réservation -->
+<form action="reserver.php" method="POST" class="space-y-4">
+    
+    <input type="hidden" name="vehicule_id" value="<?php echo $vehicule['id_vehicule']; ?>">
+    
+    <div>
+        <label class="block text-gray-700 font-semibold mb-2">Date de début</label>
+        <input type="date" name="date_debut" required class="w-full px-4 py-3 border rounded-lg">
+    </div>
+
+    <div>
+        <label class="block text-gray-700 font-semibold mb-2">Date de fin</label>
+        <input type="date" name="date_fin" required class="w-full px-4 py-3 border rounded-lg">
+    </div>
+
+    <div>
+        <label class="block text-gray-700 font-semibold mb-2">Lieu de départ</label>
+        <input type="text" name="lieu_depart" required class="w-full px-4 py-3 border rounded-lg">
+    </div>
+
+    <div>
+        <label class="block text-gray-700 font-semibold mb-2">Lieu de retour</label>
+        <input type="text" name="lieu_retour" required class="w-full px-4 py-3 border rounded-lg">
+    </div>
+
+    <button type="submit" class="w-full bg-green-600 text-white py-4 rounded-lg font-bold">
+        Réserver
+    </button>
+
+</form>
 
                     </div>
 

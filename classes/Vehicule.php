@@ -87,13 +87,18 @@ public static function filtrerParCategorie($pdo, $categorie_id) {
 
 // Lister avec pagination
 public static function listerPagine($pdo, $limit, $offset) {
+    
+    $limit = (int)$limit;
+    $offset = (int)$offset;
+    
     $sql = "SELECT vehicules.*, categories.nom AS nom_categorie 
             FROM vehicules 
             INNER JOIN categories ON vehicules.categorie_id = categories.id_categorie 
             WHERE vehicules.disponible = 1 
-            LIMIT ? OFFSET ?";
+            LIMIT $limit OFFSET $offset";
+    
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([$limit, $offset]);
+    $stmt->execute();  
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 

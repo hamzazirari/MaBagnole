@@ -1,18 +1,18 @@
 <?php
 class Reservation {
-    private $id;
-    private $client_id;
-    private $vehicule_id;
+    private $id_reservation;
+    private $client_id_reserv;      
+    private $vehicule_id_reserv;    //
     private $date_debut;
     private $date_fin;
     private $lieu_depart;
     private $lieu_retour;
     private $statut;
 
-    public function __construct($id, $client_id, $vehicule_id, $date_debut, $date_fin, $lieu_depart, $lieu_retour, $statut) {
-        $this->id = $id;
-        $this->client_id = $client_id;
-        $this->vehicule_id = $vehicule_id;
+    public function __construct($id_reservation, $client_id_reserv, $vehicule_id_reserv, $date_debut, $date_fin, $lieu_depart, $lieu_retour, $statut) {
+        $this->id_reservation = $id_reservation;
+        $this->client_id_reserv = $client_id_reserv;
+        $this->vehicule_id_reserv = $vehicule_id_reserv;
         $this->date_debut = $date_debut;
         $this->date_fin = $date_fin;
         $this->lieu_depart = $lieu_depart;
@@ -21,16 +21,16 @@ class Reservation {
     }
 
     // Getters
-    public function getId() {
-        return $this->id;
+    public function getIdReservation() {
+        return $this->id_reservation;
     }
 
-    public function getClientId() {
-        return $this->client_id;
+    public function getClientIdReserv() {    
+        return $this->client_id_reserv;
     }
 
-    public function getVehiculeId() {
-        return $this->vehicule_id;
+    public function getVehiculeIdReserv() {  
+        return $this->vehicule_id_reserv;
     }
 
     public function getDateDebut() {
