@@ -36,3 +36,20 @@ class Theme
     public function setActif($actif) {
          $this->actif = $actif; }
 }
+
+public static function listerTousActifs($pdo) {
+    $sql = "SELECT * FROM themes WHERE actif = 1";
+    $stmt = $pdo->query($sql);
+    $resultats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    $themes = [];
+    foreach ($resultats as $row) {
+        $themes[] = new Theme(
+            $row['id'],
+            $row['titre'],
+            $row['description'],
+            $row['actif']
+        );
+    }
+    return $themes;
+}
