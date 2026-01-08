@@ -52,4 +52,58 @@ class Article {
          return $this->contenu; }
     public function setContenu($contenu) { 
         $this->contenu = $contenu; }
+
+        public static function listerParTheme($pdo, $idTheme) {
+
+    $sql = "SELECT * FROM articles WHERE id_theme = ?";
+    
+    
+    $stmt = $pdo->prepare($sql);
+    
+    $stmt->execute([$idTheme]);
+    
+    $resultats = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    $articles = [];
+    foreach ($resultats as $row) {
+        $articles[] = new Article(
+            $row['id'],
+            $row['id_client'],
+            $row['id_theme'],
+            $row['titre'],
+            $row['contenu'],
+            $row['tags'],
+            $row['date_publication'],
+            $row['statut']
+        );
+    }
+    
+    return $articles;
+}
+
+public static function trouverParId($pdo, $id) {
+    $sql = "SELECT * FROM articles WHERE id = ?";
+    
+    $stmt = $pdo->prepare($sql);
+    
+    $stmt->execute([$id]);
+    
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+    if ($row) {
+        return new Article(
+            $row['id'],
+            $row['id_client'],
+            $row['id_theme'],
+            $row['titre'],
+            $row['contenu'],
+            $row['tags'],
+            $row['date_publication'],
+            $row['statut']
+        );
+    }
+        return null;
+}
+
+
 }
