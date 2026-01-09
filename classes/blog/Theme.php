@@ -1,5 +1,6 @@
 <?php
 namespace App\Blog;
+use PDO;
 
 class Theme 
 {
@@ -35,10 +36,13 @@ class Theme
          return $this->actif; }
     public function setActif($actif) {
          $this->actif = $actif; }
-}
 
-public static function listerTousActifs($pdo) {
-    $sql = "SELECT * FROM themes WHERE actif = 1";
+
+
+    public static function listerTousActifs($pdo) {
+
+    
+    $sql = "SELECT * FROM theme WHERE actif = 1";
     $stmt = $pdo->query($sql);
     $resultats = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
@@ -53,3 +57,5 @@ public static function listerTousActifs($pdo) {
     }
     return $themes;
 }
+}
+

@@ -38,20 +38,21 @@ class Article {
     public function setContenu($contenu) { 
         $this->contenu = $contenu; }
 
-            public function getContenu() {
-         return $this->contenu; }
-    public function setContenu($contenu) { 
-        $this->contenu = $contenu; }
+            public function getTag() {
+         return $this->tag; }
 
-            public function getContenu() {
-         return $this->contenu; }
-    public function setContenu($contenu) { 
-        $this->contenu = $contenu; }
+    public function setTag($tag) { 
+        $this->tag = $tag; }
 
-            public function getContenu() {
+            public function getDate_publication() {
+         return $this->date_publication; }
+    public function setdate_publication($date_publication) { 
+        $this->date_publication = $date_publication; }
+
+            public function getStatut() {
          return $this->contenu; }
-    public function setContenu($contenu) { 
-        $this->contenu = $contenu; }
+    public function setStatut($statut) { 
+        $this->statut = $statut; }
 
         public static function listerParTheme($pdo, $idTheme) {
 

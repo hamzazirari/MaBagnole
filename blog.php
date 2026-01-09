@@ -1,7 +1,33 @@
 <?php
 
-?>
+session_start();
 
+require_once 'classes/blog/theme.php';
+require_once 'classes/blog/article.php';
+require_once 'classes/Database.php'; 
+
+use App\Blog\Theme; 
+use App\Blog\Article; 
+
+$database = new Database();
+$pdo = $database->getPdo();
+
+$themes = Theme::listerTousActifs($pdo);
+
+$themeSelectionne = isset($_GET['id_theme']) ? (int)$_GET['id_theme'] : null;
+
+$articles = [];
+if ($themeSelectionne) {
+    $articles = Article::listerParTheme($pdo, $themeSelectionne);
+}
+
+$recherche = isset($_GET['recherche']) ? trim($_GET['recherche']) : '';
+$articlesRecherche = [];
+if (!empty($recherche)) {
+    $articlesRecherche = Article::rechercherParTitre($pdo, $recherche);
+}
+
+?>
 
 <!DOCTYPE html>
 <html lang="fr">
@@ -38,45 +64,102 @@
             </form>
         </div>
         
+        <!-- RÉSULTATS DE RECHERCHE ladar lrecherche -->
+        <?php if (!empty($recherche)): ?>
+            <section class="mb-12">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">🔍 Résultats pour "<?= htmlspecialchars($recherche) ?>"</h2>
+                
+                <?php if (empty($articlesRecherche)): ?>
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded">
+                        Aucun article trouvé pour cette recherche.
+                    </div>
+                <?php else: ?>
+                    <div class="space-y-6">
+                        <?php foreach ($articlesRecherche as $article): ?>
+                            <div class="bg-white rounded-lg shadow-md p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="text-xl font-bold text-gray-800">
+                                        <a href="article.php?id=<?= $article['id'] ?>" class="hover:text-blue-600">
+                                            <?= htmlspecialchars($article['titre']) ?>
+                                        </a>
+                                    </h3>
+                                    <span class="text-sm text-gray-500">📅 <?= date('d/m/Y', strtotime($article['date_publication'])) ?></span>
+                                </div>
+                                <p class="text-gray-600 mb-4"><?= htmlspecialchars(substr($article['contenu'], 0, 200)) ?>...</p>
+                                <div class="flex items-center justify-between">
+                                    <?php if (!empty($article['tags'])): ?>
+                                        <span class="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full">🏷️ <?= htmlspecialchars($article['tags']) ?></span>
+                                    <?php endif; ?>
+                                    <a href="article.php?id=<?= $article['id'] ?>" class="text-blue-600 hover:text-blue-800 font-semibold">
+                                        Lire la suite →
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </section>
+        <?php endif; ?>
+        
         <!-- SECTION THÈMES -->
         <section class="mb-12">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">🎯 Thèmes disponibles</h2>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- LES THÈMES SERONT AFFICHÉS ICI EN PHP -->
-                <!-- Exemple de card thème (à répéter avec PHP) -->
-                <a href="blog.php?id_theme=1" class="block">
-                    <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition p-6 h-full border-l-4 border-blue-500">
-                        <h3 class="text-xl font-bold text-gray-800 mb-2">Nom du thème</h3>
-                        <p class="text-gray-600">Description du thème...</p>
-                        <span class="inline-block mt-4 text-blue-600 font-semibold">Voir les articles →</span>
-                    </div>
-                </a>
-            </div>
+            <?php if (empty($themes)): ?>
+                <p class="text-gray-600">Aucun thème disponible pour le moment.</p>
+            <?php else: ?>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <?php foreach ($themes as $theme): ?>
+                        <a href="blog.php?id_theme=<?= $theme['id'] ?>" class="block">
+                            <div class="bg-white rounded-lg shadow-md hover:shadow-xl transition p-6 h-full border-l-4 border-blue-500">
+                                <h3 class="text-xl font-bold text-gray-800 mb-2"><?= htmlspecialchars($theme['titre']) ?></h3>
+                                <p class="text-gray-600"><?= htmlspecialchars($theme['description']) ?></p>
+                                <span class="inline-block mt-4 text-blue-600 font-semibold">Voir les articles →</span>
+                            </div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
         </section>
         
-        <!-- SECTION ARTICLES (affichée si un thème est sélectionné) -->
-        <section>
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">📝 Articles</h2>
-            
-            <div class="space-y-6">
-                <!-- LES ARTICLES SERONT AFFICHÉS ICI EN PHP -->
-                <!-- Exemple de card article (à répéter avec PHP) -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="flex justify-between items-start mb-4">
-                        <h3 class="text-xl font-bold text-gray-800">Titre de l'article</h3>
-                        <span class="text-sm text-gray-500">📅 01/01/2024</span>
-                    </div>
-                    <p class="text-gray-600 mb-4">Extrait du contenu de l'article...</p>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full">🏷️ Tag</span>
-                        <a href="article.php?id=1" class="text-blue-600 hover:text-blue-800 font-semibold">
-                            Lire la suite →
-                        </a>
-                    </div>
+        <?php if ($themeSelectionne): ?>
+            <section>
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">📝 Articles du thème</h2>
+                    <a href="blog.php" class="text-blue-600 hover:text-blue-800 font-semibold">← Retour aux thèmes</a>
                 </div>
-            </div>
-        </section>
+                
+                <?php if (empty($articles)): ?>
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded">
+                        Aucun article disponible pour ce thème.
+                    </div>
+                <?php else: ?>
+                    <div class="space-y-6">
+                        <?php foreach ($articles as $article): ?>
+                            <div class="bg-white rounded-lg shadow-md p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="text-xl font-bold text-gray-800">
+                                        <a href="article.php?id=<?= $article['id'] ?>" class="hover:text-blue-600">
+                                            <?= htmlspecialchars($article['titre']) ?>
+                                        </a>
+                                    </h3>
+                                    <span class="text-sm text-gray-500">📅 <?= date('d/m/Y', strtotime($article['date_publication'])) ?></span>
+                                </div>
+                                <p class="text-gray-600 mb-4"><?= htmlspecialchars(substr($article['contenu'], 0, 200)) ?>...</p>
+                                <div class="flex items-center justify-between">
+                                    <?php if (!empty($article['tags'])): ?>
+                                        <span class="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full">🏷️ <?= htmlspecialchars($article['tags']) ?></span>
+                                    <?php endif; ?>
+                                    <a href="article.php?id=<?= $article['id'] ?>" class="text-blue-600 hover:text-blue-800 font-semibold">
+                                        Lire la suite →
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </section>
+        <?php endif; ?>
         
     </div>
     
